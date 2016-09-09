@@ -1,12 +1,3 @@
-// Daniel Shiffman
-// Depth thresholding example
-
-// https://github.com/shiffman/OpenKinect-for-Processing
-// http://shiffman.net/p5/kinect/
-
-// Original example by Elie Zananiri
-// http://www.silentlycrashing.net
-
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
 
@@ -17,12 +8,12 @@ color yellow = color(255, 255, 34);
 color blue =  color(36, 236, 255);
 color green = color(174, 252, 0);
 
-
 // Depth image
 PImage depthImg;
 
 int[] age;
 int[] original_depth;
+boolean image_backgroud = false;
 
 color[] colors = new color[] {
   yellow,
@@ -36,13 +27,12 @@ int maxDepth = 890;
 // What is the kinect's angle
 float angle;
 
-int tick = 0;
-
 void setup() {
   size(640, 480);
 
   kinect = new Kinect(this);
   kinect.initDepth();
+  kinect.initVideo();
   angle = kinect.getTilt();
 
   // Blank image
@@ -61,6 +51,7 @@ void draw() {
   
   // Threshold the depth image
   int[] rawDepth = kinect.getRawDepth();
+  color[] image = kinect.getVideoImage().pixels;
   for (int i=0; i < rawDepth.length; i++) {
     
     age[i]++;
@@ -73,12 +64,12 @@ void draw() {
       original_depth[i] = rawDepth[i];
     }
     
-    if (age[i] < 2) { //&& rawDepth[i] < original_depth[i]) {
-       depthImg.pixels[i] = pink;
+    if (age[i] < 2) {
+       depthImg.pixels[i] = image_backgroud ? image[i] : pink;
     } else if (age[i] < trail_stripe_count*trail_stripe_width) {   
       depthImg.pixels[i] = colors[(age[i]/trail_stripe_width) % colors.length];
     } else {
-      depthImg.pixels[i] = blue;
+      depthImg.pixels[i] = image_backgroud ? image[i] : blue;
     }
   }
 
@@ -87,8 +78,8 @@ void draw() {
   image(depthImg, 0, 0);
 
   fill(0);
-  //text("TILT: " + angle, 10, 20);
-  //text("THRESHOLD: [" + minDepth + ", " + maxDepth + "]", 10, 36);
+  text("TILT: " + angle, 10, 20);
+  text("THRESHOLD: [" + minDepth + ", " + maxDepth + "]", 10, 36);
 }
 
 // Adjust the angle and the depth threshold min and max
@@ -109,5 +100,7 @@ void keyPressed() {
     maxDepth = constrain(maxDepth+10, minDepth, 2047);
   } else if (key =='x') {
     maxDepth = constrain(maxDepth-10, minDepth, 2047);
-  }
+  } else if (key == 'i') {
+    image_backgroud = !image_backgroud;
+  } 
 }
