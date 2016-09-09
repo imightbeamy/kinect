@@ -20,7 +20,10 @@ color green = color(174, 252, 0);
 
 // Depth image
 PImage depthImg;
+
 int[] age;
+int[] original_depth;
+
 color[] colors = new color[] {
   yellow,
   green
@@ -28,7 +31,7 @@ color[] colors = new color[] {
 
 // Which pixels do we care about?
 int minDepth =  60;
-int maxDepth = 860;
+int maxDepth = 890;
 
 // What is the kinect's angle
 float angle;
@@ -45,7 +48,14 @@ void setup() {
   // Blank image
   depthImg = new PImage(kinect.width, kinect.height);
   age = new int[kinect.width * kinect.height];  
+  original_depth = new int[kinect.width * kinect.height];
+  for (int i=0; i < original_depth.length; i++) {
+    original_depth[i] = maxDepth;
+  }
 }
+
+int trail_stripe_count = 5;
+int trail_stripe_width = 5;
 
 void draw() {
   
@@ -53,17 +63,22 @@ void draw() {
   int[] rawDepth = kinect.getRawDepth();
   for (int i=0; i < rawDepth.length; i++) {
     
-    if (rawDepth[i] >= minDepth && rawDepth[i] <= maxDepth) {
+    age[i]++;
+    
+    if (
+      rawDepth[i] >= minDepth &&
+      rawDepth[i] <= maxDepth &&
+      ((rawDepth[i] - 3) <= original_depth[i] || age[i] >= trail_stripe_count*trail_stripe_width)) {
       age[i] = 0;
-      depthImg.pixels[i] = pink;
+      original_depth[i] = rawDepth[i];
+    }
+    
+    if (age[i] < 2) { //&& rawDepth[i] < original_depth[i]) {
+       depthImg.pixels[i] = pink;
+    } else if (age[i] < trail_stripe_count*trail_stripe_width) {   
+      depthImg.pixels[i] = colors[(age[i]/trail_stripe_width) % colors.length];
     } else {
-      age[i]++;
-      
-      if (age[i] > 50) {
-        depthImg.pixels[i] = blue;
-      } else {
-         depthImg.pixels[i] = colors[(age[i]/5) % colors.length];
-      }
+      depthImg.pixels[i] = blue;
     }
   }
 
@@ -72,8 +87,8 @@ void draw() {
   image(depthImg, 0, 0);
 
   fill(0);
-  text("TILT: " + angle, 10, 20);
-  text("THRESHOLD: [" + minDepth + ", " + maxDepth + "]", 10, 36);
+  //text("TILT: " + angle, 10, 20);
+  //text("THRESHOLD: [" + minDepth + ", " + maxDepth + "]", 10, 36);
 }
 
 // Adjust the angle and the depth threshold min and max
