@@ -9,43 +9,42 @@ color yellow = color(255, 255, 34);
 color blue =  color(36, 236, 255);
 color green = color(174, 252, 0);
 
-ArrayList<Contour> contours;
 ArrayList<PVector> points;
+ImageContours ic;
+PImage image;
 
 void setup() {
   
   size(800, 800);
   smooth();
+  
+  // Init physics
   Fisica.init(this);
   world = new FWorld();
   world.setGravity(0, 500);
   
-  opencv = new OpenCV(this, loadImage("test1.png"));
-  opencv.gray();
-  opencv.invert();
-  opencv.threshold(70);
+  image = loadImage("test1.png");
+  opencv = new OpenCV(this, image.width, image.height);
   
-  contours = opencv.findContours();
-  for (Contour contour : contours) { 
-    FPoly l = new FPoly();
-    
-    points = contour.getPolygonApproximation().getPoints();
-    println(points.size());
-    for (PVector p : points) {
-       l.vertex(p.x, p.y);
-       //ellipse(p.x,p.y, 10, 10);
-    }
-    l.setFill(174, 252, 0);
-    l.setFriction(.2);
-    l.setStatic(true);
-    world.add(l);
-  }
+  ic = new ImageContours(opencv, world);
 }
+
+int i = 1;
+int d = 1;
 
 void draw() {
   
   background(pink);
-    
+  
+  if ((frameCount % 40) == 0) {
+    i+=d;
+    if (i == 16 || i == 1) {
+      d = -d;
+    }
+  }
+  
+  ic.updateShapes(loadImage("test" + i + ".png"));
+
   if (random(100) < 10) {
     //FBlob b = new FBlob();
     //b.setAsCircle(random(width), 0, 15, 3);
