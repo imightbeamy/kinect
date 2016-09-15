@@ -1,7 +1,7 @@
 class Drops {
   
   FWorld world;
-    
+  
   Drops(FWorld world) {
     this.world = world;
   }
@@ -28,11 +28,11 @@ class Drops {
     drop.setVelocity(0, v);
     drop.adjustRotation(0.01 * random(1));
     drop.setName("drop");
-    world.add(drop); 
+    world.add(drop);
   }
   
-  void replace(FBody b) {
-    if("drop".equals(b.getName())) {
+  void replace(FBody b, FBody b2) {
+    if("drop".equals(b.getName()) && !"drop".equals(b2.getName())) {
       world.remove(b);
       FBlob blob = new FBlob();
       blob.setAsCircle(b.getX(), b.getY(), 15, 10);

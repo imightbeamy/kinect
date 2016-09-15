@@ -15,6 +15,7 @@ class ImageContours {
     opencv.loadImage(image);
     opencv.gray();
     opencv.blur(15);
+   // opencv.flip(1);
     opencv.threshold(100);
    //image(opencv.getSnapshot(), 0, 0);
      
@@ -31,7 +32,7 @@ class ImageContours {
     for (FPoly poly : polys) {
       world.remove(poly);
     }
-    polys = new ArrayList<FPoly>();
+    polys.clear();
           
     for (Contour contour : ic.fromImage(image)) { 
       FPoly l = new FPoly();
