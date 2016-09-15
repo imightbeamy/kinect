@@ -14,11 +14,13 @@ class ImageContours {
   ArrayList<Contour> fromImage(PImage image) {
     opencv.loadImage(image);
     opencv.gray();
-    opencv.invert();
-    opencv.threshold(70);
+    opencv.blur(15);
+    opencv.threshold(100);
+   //image(opencv.getSnapshot(), 0, 0);
      
-    ArrayList<Contour> axprox = new ArrayList<Contour>();
+  ArrayList<Contour> axprox = new ArrayList<Contour>();
    for (Contour contour : opencv.findContours()) { 
+     contour.setPolygonApproximationFactor(1);
       axprox.add(contour.getPolygonApproximation());
    } 
    return  axprox;
@@ -41,6 +43,7 @@ class ImageContours {
       l.setFill(174, 252, 0);
       l.setFriction(.2);
       l.setStatic(true);
+      l.setNoStroke();
       polys.add(l);
       world.add(l);
     }

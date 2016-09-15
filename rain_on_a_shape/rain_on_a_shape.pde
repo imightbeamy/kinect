@@ -1,8 +1,11 @@
 import fisica.*;
 import gab.opencv.*;
+import org.openkinect.freenect.*;
+import org.openkinect.processing.*;
 
 FWorld world;
 OpenCV opencv;
+Kinect kinect;
 
 color pink = color(255, 34, 168);
 color yellow = color(255, 255, 34);
@@ -11,67 +14,46 @@ color green = color(174, 252, 0);
 
 ArrayList<PVector> points;
 ImageContours ic;
+Drops drops;
 PImage image;
+
+int minDepth =  60;
+int maxDepth = 890;
 
 void setup() {
   
-  size(800, 800);
+  size(640, 480);
   smooth();
+  
+  kinect = new Kinect(this);
+  kinect.initDepth();
   
   // Init physics
   Fisica.init(this);
   world = new FWorld();
   world.setGravity(0, 500);
   
-  image = loadImage("test1.png");
+  image = new PImage(kinect.width, kinect.height);
   opencv = new OpenCV(this, image.width, image.height);
   
   ic = new ImageContours(opencv, world);
+  drops = new Drops(world);
 }
-
-int i = 1;
-int d = 1;
 
 void draw() {
   
   background(pink);
   
-  if ((frameCount % 40) == 0) {
-    i+=d;
-    if (i == 16 || i == 1) {
-      d = -d;
-    }
+  int[] rawDepth = kinect.getRawDepth();
+  for (int i=0; i < rawDepth.length; i++) {
+    image.pixels[i] = 
+      rawDepth[i] >= minDepth && rawDepth[i] <= maxDepth ? color(255) : color(0);
   }
-  
-  ic.updateShapes(loadImage("test" + i + ".png"));
+  image.updatePixels();
+  ic.updateShapes(image);
 
   if (random(100) < 10) {
-    //FBlob b = new FBlob();
-    //b.setAsCircle(random(width), 0, 15, 3);
-    
-    int w = 10;
-    
-    FPoly tail = new FPoly();
-    tail.vertex(-w/2, 0);
-    tail.vertex(0, -2*w);
-    tail.vertex(w/2, 0);
-    tail.setNoStroke();
-    tail.setFill(36, 236, 255);
-   
-    FCircle dot = new FCircle(w);
-    dot.setNoStroke();
-    dot.setFill(36, 236, 255);
-    
-   FCompound drop = new FCompound();
-    drop.addBody(dot);
-    drop.addBody(tail);
-    drop.setPosition(random(width), 0);
-    drop.setRestitution(.3);
-    drop.setFriction(.1);
-    drop.setVelocity(0, 100 + random(100));
-    drop.adjustRotation(0.01 * random(1));
-    drop.setName("drop");
-    world.add(drop);
+    drops.addDrop(int(random(width)), 10);
   }
   
   world.step();
@@ -79,21 +61,7 @@ void draw() {
 }
 
 void contactStarted(FContact contact) {
-   replace(contact.getBody1());
-   replace(contact.getBody2());
+   drops.replace(contact.getBody1());
+   drops.replace(contact.getBody2());
  }
  
-void replace(FBody b) {
-  if("drop".equals(b.getName())) {
-    world.remove(b);
-    FBlob blob = new FBlob();
-    blob.setAsCircle(b.getX(), b.getY(), 15, 10);
-    blob.setVelocity(b.getVelocityX(), b.getVelocityY());
-    blob.setNoStroke();
-    blob.setVertexSize(1);
-    blob.setFrequency(.2);
-    blob.setDamping(1000);
-    blob.setFill(36, 236, 255);
-    world.add(blob);
-  }
-}
